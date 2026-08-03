@@ -1,0 +1,142 @@
+import random
+import sounddevice as sd
+import scipy.io.wavfile as wav
+import speech_recognition as sr
+from googletrans import Translator
+
+translator = Translator()
+recognizer = sr.Recognizer()
+
+words_by_level = {
+    "fácil": {
+        "gato": "cat",
+        "cachorro": "dog",
+        "maçã": "apple",
+        "leite": "milk",
+        "sol": "sun"
+    },
+    "médio": {
+        "casa": "house",
+        "escola": "school",
+        "amigo": "friend",
+        "janela": "window",
+        "amarelo": "yellow"
+    },
+    "difícil": {
+        "tecnologia": "technology",
+        "universidade": "university",
+        "informação": "information",
+        "pronúncia": "pronunciation",
+        "imaginação": "imagination"
+    }
+}
+
+
+print("=" * 40)
+print("SPEAK RIGHT")
+print("=" * 40)
+print("Pronuncie a tradução da palavra em inglês!")
+print()
+
+
+print("Escolha um nível:")
+print("1 - Fácil")
+print("2 - Médio")
+print("3 - Difícil")
+
+opcao = input("Digite: ")
+
+if opcao == "1":
+    nivel = "fácil"
+elif opcao == "2":
+    nivel = "médio"
+else:
+    nivel = "difícil"
+
+pontos = 0
+erros = 0
+
+print(f"\nNível escolhido: {nivel}")
+
+while erros < 3:
+
+    palavra = random.choice(list(words_by_level[nivel].keys()))
+    traducao = words_by_level[nivel][palavra].lower()
+
+
+    print("\n--------------------------------")
+    print(f"🇧🇷 Palavra: {palavra}")
+    input("Pressione ENTER para gravar...")
+
+    print("Gravando...")
+
+    fs = 44100
+    duration = 4
+
+    audio = sd.rec(
+    int(duration * fs),
+    samplerate=fs,
+    channels=1,
+    dtype="int16"
+)
+    sd.wait()
+
+    wav.write("voz.wav", fs, audio)
+
+    with sr.AudioFile("voz.wav") as source:
+        audio_data = recognizer.record(source)
+
+    try:
+        recognized = recognizer.recognize_google(
+            audio_data,
+            language="en-US"
+        )
+
+        recognized = recognized.lower()
+
+        corrections = {
+            "mute": "milk",
+            "send": "sun",
+            "cats": "cat"
+        }   
+
+        if recognized in corrections:
+            recognized = corrections[recognized]
+
+        print("Você falou:", recognized)
+        print("Resposta:", traducao)
+
+        import difflib
+
+        similaridade = difflib.SequenceMatcher(
+            None,
+            recognized,
+            traducao
+        ).ratio()
+
+        if similaridade >= 0.8:
+            print("Correto!")
+            pontos += 10
+
+        else:
+            print("Errado!")
+            erros += 1
+
+    except:
+        print("Não foi possível reconhecer sua voz.")
+        erros += 1
+
+    print(f"Pontos: {pontos}")
+    print(f"Erros: {erros}/3")
+
+print("\n========================")
+print("FIM DE JOGO")
+print("========================")
+print(f"Pontuação final: {pontos}")
+
+if pontos >= 50:
+    print("Excelente!")
+elif pontos >= 20:
+    print("Muito bom!")
+else:
+    print("Continue praticando inglês!")
