@@ -140,3 +140,5 @@ elif pontos >= 20:
     print("Muito bom!")
 else:
     print("Continue praticando inglês!")
+
+print("Bem-vindo ao Speak Right!")
