@@ -1,8 +1,18 @@
 import random
+import difflib
 import sounddevice as sd
 import scipy.io.wavfile as wav
 import speech_recognition as sr
 from googletrans import Translator
+
+def verificar_resposta(reconhecido, traducao):
+    similaridade = difflib.SequenceMatcher(
+        None,
+        reconhecido,
+        traducao
+    ).ratio()
+
+    return similaridade >= 0.8
 
 translator = Translator()
 recognizer = sr.Recognizer()
@@ -50,8 +60,11 @@ if opcao == "1":
     nivel = "fácil"
 elif opcao == "2":
     nivel = "médio"
-else:
+elif opcao == "3":
     nivel = "difícil"
+else:
+    print("Opção inválida!")
+    exit()
 
 pontos = 0
 erros = 0
@@ -106,8 +119,6 @@ while erros < 3:
         print("Você falou:", recognized)
         print("Resposta:", traducao)
 
-        import difflib
-
         similaridade = difflib.SequenceMatcher(
             None,
             recognized,
@@ -122,8 +133,12 @@ while erros < 3:
             print("Errado!")
             erros += 1
 
-    except:
-        print("Não foi possível reconhecer sua voz.")
+    except sr.UnknownValueError:
+        print("Não foi possível entender sua voz.")
+        erros += 1
+
+    except sr.RequestError:
+        print("Erro no serviço de reconhecimento de voz.")
         erros += 1
 
     print(f"Pontos: {pontos}")
